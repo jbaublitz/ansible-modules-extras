@@ -24,6 +24,7 @@ module: gcdataproc
 short_description: Module for Google Cloud Dataproc clusters.
 description:
   - Creates or destroys Google Cloud Dataproc clusters on Google Cloud.
+    For more information on Dataproc, see: https://cloud.google.com/dataproc/.
 version_added: "2.3"
 author: "John Baublitz @jbaublitz"
 requirements:
@@ -31,168 +32,87 @@ requirements:
   - "google-api-python-client >= 1.5.4"
   - "oauth2client >= 3.0.0"
 options:
+  name:
+    description:
+      - Name of the dataproc cluster from which to generate node names.
+    required: true
+  state:
+    description:
+      - Desired state of the dataproc cluster.
+    default: present
+    choices: ['present', 'active', 'absent', 'deleted']
+  network:
+    description:
+      - Network on which to provision the dataproc cluster. Cannot be
+        specified with subnetwork.
+  subnetwork:
+    description:
+      - Subnetwork on which to provision the dataproc cluster. Cannot be
+        specified with network.
+  region:
+    description:
+      - Specifies the region of resources like network and subnetwork
+        in which to provision the cluster.
+    default: us-central1
+  zone:
+    description:
+      - Specifies the zone of the dataproc cluster configuration.
+    default: us-central1-a
+  sync:
+    description:
+      - Wait for completion of dataproc provisioning to return.
+    default: true
+    choices: [true, false]
+  poll_interval:
+    description:
+      - Poll interval for checking job completion when 'sync' is true.
+    default: 1
+  image_version:
+    description:
+      - Cluster software image version.
+  service_account_scopes:
+    description:
+      - See https://developers.google.com/identity/protocols/googlescopes#dataprocv1
+        for more information on OAuth2 scopes available for dataproc.
+  metadata:
+    description:
+      - Unvalidated dict of metadata passed to dataproc clusters on creation.
+        See https://cloud.google.com/dataproc/docs/reference/rest/v1/projects.regions.clusters#gceclusterconfig
+        and the metadata field in this object for more information.
+  init_actions:
+    description:
+      - Unvalidated list of initialization actions passed to dataproc clusters on creation.
+        Each object in the list is defined by the following object:
+        https://cloud.google.com/dataproc/docs/reference/rest/v1/projects.regions.clusters#nodeinitializationaction.
+  master_config:
+    description:
+      - Unvalidated dict specifying the master configuration for the cluster.
+        https://cloud.google.com/dataproc/docs/reference/rest/v1/projects.regions.clusters#instancegroupconfig.
+  worker_config:
+    description:
+      - Unvalidated dict specifying the master configuration for the cluster.
+        https://cloud.google.com/dataproc/docs/reference/rest/v1/projects.regions.clusters#instancegroupconfig.
+  second_worker_config:
+    description:
+      - Unvalidated dict specifying the master configuration for the cluster.
+        https://cloud.google.com/dataproc/docs/reference/rest/v1/projects.regions.clusters#instancegroupconfig.
+  bucket:
+    description:
+      - A Google Cloud Storage staging bucket used for sharing generated SSH keys and config. If you do not
+        specify a staging bucket, Cloud Dataproc will determine an appropriate Cloud Storage location
+        (US, ASIA, or EU) for your cluster's staging bucket according to the Google Compute Engine zone where
+        your cluster is deployed, and then it will create and manage this project-level, per-location bucket for you.
+        (from https://cloud.google.com/dataproc/docs/reference/rest/v1/projects.regions.clusters#clusterconfig)
 notes:
+  - Because this module deals directly with a highly variable JSON REST API, much of the input is unvalidated.
+    Check the documentation for Google Cloud for defaults on the cloud side. If input is improperly formatted,
+    ansible will pass back the Google error as opposed to throwing an error on the ansible side.
 '''
 
 EXAMPLES = '''
-# Create an A record.
-- gcdns_record:
-    record: 'www1.example.com'
-    zone: 'example.com'
-    type: A
-    value: '1.2.3.4'
-
-# Update an existing record.
-- gcdns_record:
-    record: 'www1.example.com'
-    zone: 'example.com'
-    type: A
-    overwrite: true
-    value: '5.6.7.8'
-
-# Remove an A record.
-- gcdns_record:
-    record: 'www1.example.com'
-    zone_id: 'example-com'
-    state: absent
-    type: A
-    value: '5.6.7.8'
-
-# Create a CNAME record.
-- gcdns_record:
-    record: 'www.example.com'
-    zone_id: 'example-com'
-    type: CNAME
-    value: 'www.example.com.'    # Note the trailing dot
-
-# Create an MX record with a custom TTL.
-- gcdns_record:
-    record: 'example.com'
-    zone: 'example.com'
-    type: MX
-    ttl: 3600
-    value: '10 mail.example.com.'    # Note the trailing dot
-
-# Create multiple A records with the same name.
-- gcdns_record:
-    record: 'api.example.com'
-    zone_id: 'example-com'
-    type: A
-    record_data:
-      - '192.0.2.23'
-      - '10.4.5.6'
-      - '198.51.100.5'
-      - '203.0.113.10'
-
-# Change the value of an existing record with multiple record_data.
-- gcdns_record:
-    record: 'api.example.com'
-    zone: 'example.com'
-    type: A
-    overwrite: true
-    record_data:           # WARNING: All values in a record will be replaced
-      - '192.0.2.23'
-      - '192.0.2.42'    # The changed record
-      - '198.51.100.5'
-      - '203.0.113.10'
-
-# Safely remove a multi-line record.
-- gcdns_record:
-    record: 'api.example.com'
-    zone_id: 'example-com'
-    state: absent
-    type: A
-    record_data:           # NOTE: All of the values must match exactly
-      - '192.0.2.23'
-      - '192.0.2.42'
-      - '198.51.100.5'
-      - '203.0.113.10'
-
-# Unconditionally remove a record.
-- gcdns_record:
-    record: 'api.example.com'
-    zone_id: 'example-com'
-    state: absent
-    overwrite: true   # overwrite is true, so no values are needed
-    type: A
-
-# Create an AAAA record
-- gcdns_record:
-    record: 'www1.example.com'
-    zone: 'example.com'
-    type: AAAA
-    value: 'fd00:db8::1'
-
-# Create a PTR record
-- gcdns_record:
-    record: '10.5.168.192.in-addr.arpa'
-    zone: '5.168.192.in-addr.arpa'
-    type: PTR
-    value: 'api.example.com.'    # Note the trailing dot.
-
-# Create an NS record
-- gcdns_record:
-    record: 'subdomain.example.com'
-    zone: 'example.com'
-    type: NS
-    ttl: 21600
-    record_data:
-      - 'ns-cloud-d1.googledomains.com.'    # Note the trailing dots on values
-      - 'ns-cloud-d2.googledomains.com.'
-      - 'ns-cloud-d3.googledomains.com.'
-      - 'ns-cloud-d4.googledomains.com.'
-
-# Create a TXT record
-- gcdns_record:
-    record: 'example.com'
-    zone_id: 'example-com'
-    type: TXT
-    record_data:
-      - '"v=spf1 include:_spf.google.com -all"'   # A single-string TXT value
-      - '"hello " "world"'    # A multi-string TXT value
 '''
 
 RETURN = '''
-overwrite:
-    description: Whether to the module was allowed to overwrite the record
-    returned: success
-    type: boolean
-    sample: True
-record:
-    description: Fully-qualified domain name of the resource record
-    returned: success
-    type: string
-    sample: mail.example.com.
-state:
-    description: Whether the record is present or absent
-    returned: success
-    type: string
-    sample: present
-ttl:
-    description: The time-to-live of the resource record
-    returned: success
-    type: int
-    sample: 300
-type:
-    description: The type of the resource record
-    returned: success
-    type: string
-    sample: A
-record_data:
-    description: The resource record values
-    returned: success
-    type: list
-    sample: ['5.6.7.8', '9.10.11.12']
-zone:
-    description: The dns name of the zone
-    returned: success
-    type: string
-    sample: example.com.
-zone_id:
-    description: The Google Cloud DNS ID of the zone
-    returned: success
-    type: string
-    sample: example-com
 '''
 
 import os
@@ -386,7 +306,6 @@ def main():
 
     module.exit_json(changed=changed, **json)
 
-# import module snippets
 from ansible.module_utils.basic import *
 if __name__ == '__main__':
     main()
