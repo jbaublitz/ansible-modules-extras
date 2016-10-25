@@ -72,37 +72,37 @@ options:
       - Cluster software image version.
   service_account_scopes:
     description:
-      - See https://developers.google.com/identity/protocols/googlescopes#dataprocv1
+      - See "https://developers.google.com/identity/protocols/googlescopes#dataprocv1"
         for more information on OAuth2 scopes available for dataproc.
   metadata:
     description:
       - Unvalidated dict of metadata passed to dataproc clusters on creation.
-        See https://cloud.google.com/dataproc/docs/reference/rest/v1/projects.regions.clusters#gceclusterconfig
+        See "https://cloud.google.com/dataproc/docs/reference/rest/v1/projects.regions.clusters#gceclusterconfig"
         and the metadata field in this object for more information.
   init_actions:
     description:
       - Unvalidated list of initialization actions passed to dataproc clusters on creation.
-        Each object in the list is defined by the following object:
-        https://cloud.google.com/dataproc/docs/reference/rest/v1/projects.regions.clusters#nodeinitializationaction.
+        Each object in the list is defined by the following object -
+        "https://cloud.google.com/dataproc/docs/reference/rest/v1/projects.regions.clusters#nodeinitializationaction".
   master_config:
     description:
       - Unvalidated dict specifying the master configuration for the cluster.
-        https://cloud.google.com/dataproc/docs/reference/rest/v1/projects.regions.clusters#instancegroupconfig.
+        "https://cloud.google.com/dataproc/docs/reference/rest/v1/projects.regions.clusters#instancegroupconfig".
   worker_config:
     description:
       - Unvalidated dict specifying the master configuration for the cluster.
-        https://cloud.google.com/dataproc/docs/reference/rest/v1/projects.regions.clusters#instancegroupconfig.
+        "https://cloud.google.com/dataproc/docs/reference/rest/v1/projects.regions.clusters#instancegroupconfig".
   second_worker_config:
     description:
       - Unvalidated dict specifying the master configuration for the cluster.
-        https://cloud.google.com/dataproc/docs/reference/rest/v1/projects.regions.clusters#instancegroupconfig.
+        "https://cloud.google.com/dataproc/docs/reference/rest/v1/projects.regions.clusters#instancegroupconfig".
   bucket:
     description:
       - A Google Cloud Storage staging bucket used for sharing generated SSH keys and config. If you do not
         specify a staging bucket, Cloud Dataproc will determine an appropriate Cloud Storage location
         (US, ASIA, or EU) for your cluster's staging bucket according to the Google Compute Engine zone where
         your cluster is deployed, and then it will create and manage this project-level, per-location bucket for you.
-        (from https://cloud.google.com/dataproc/docs/reference/rest/v1/projects.regions.clusters#clusterconfig)
+        (from "https://cloud.google.com/dataproc/docs/reference/rest/v1/projects.regions.clusters#clusterconfig")
 notes:
   - Because this module deals directly with a highly variable JSON REST API, much of the input is unvalidated.
     Check the documentation for Google Cloud for defaults on the cloud side. If input is improperly formatted,
@@ -131,7 +131,7 @@ metadata:
       and common metadata such as create time. Some services might not provide such metadata. Any method
       that returns a long-running operation should document the metadata type, if any.
       An object containing fields of an arbitrary type. An additional field "@type" contains a URI
-      identifying the type. Example: { "id": 1234, "@type": "types.example.com/standard/id" }.
+      identifying the type.
 done:
   description:
     - If the value is false, it means the operation is still in progress. If true, the operation is completed,
@@ -147,7 +147,7 @@ response:
       the type XxxResponse, where Xxx is the original method name. For example, if the original method
       name is TakeSnapshot(), the inferred response type is TakeSnapshotResponse.
       An object containing fields of an arbitrary type. An additional field "@type" contains a URI
-      identifying the type. Example: { "id": 1234, "@type": "types.example.com/standard/id" }.
+      identifying the type.
 '''
 
 import os
