@@ -24,7 +24,7 @@ module: gcdataproc
 short_description: Module for Google Cloud Dataproc clusters.
 description:
   - Creates or destroys Google Cloud Dataproc clusters on Google Cloud.
-    For more information on Dataproc, see: https://cloud.google.com/dataproc/.
+    For more information on Dataproc, see "https://cloud.google.com/dataproc/".
 version_added: "2.3"
 author: "John Baublitz @jbaublitz"
 requirements:
